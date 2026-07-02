@@ -110,12 +110,16 @@ export function setJailsConfigPath(p: string) {
 
 /**
  * The default new-jail config: equivalent to
- *   firejail --private=DIR --private-tmp --noprofile
+ *   firejail --private=DIR --private-tmp --noprofile --hostname=NAME
+ *
+ * The hostname defaults to the jail name so shells and TUIs inside the sandbox
+ * show the jail identity in their prompt without extra configuration.
  */
 export function defaultJail(name: string, privateDir: string): JailConfiguration {
     return {
         name,
         privateDir,
+        hostname: name,
         privateTmp: true,
         noprofile: true,
         tab: true,
