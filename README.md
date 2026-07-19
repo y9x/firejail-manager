@@ -6,6 +6,26 @@ Manage local [firejail](https://firejail.wordpress.com/) sandboxes as VSCode rem
 
 - Linux with [firejail](https://firejail.wordpress.com/) installed and on your `$PATH` (or point `firejail.firejailPath` at the binary).
 
+### Activation
+
+> NOTE: Not needed in VSCodium since version 1.75
+
+Enable the extension in your `argv.json`:
+
+```json
+{
+    ...
+    "enable-proposed-api": [
+        ...,
+        "e9x.firejail-manager"
+    ]
+    ...
+}
+```
+
+which you can open by running the `Preferences: Configure Runtime Arguments` command.
+The file is located in `~/.vscode-oss/argv.json`.
+
 ## How it works
 
 Each jail is a firejail sandbox definition. When you connect, the extension:
