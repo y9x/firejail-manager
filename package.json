@@ -13,7 +13,7 @@
 		"url": "https://github.com/e9x/firejail-manager/issues"
 	},
 	"engines": {
-		"vscode": "^1.70.2"
+		"vscode": ">=1.70.2"
 	},
 	"main": "./lib/extension.js",
 	"browser": "./lib/extension.js",
