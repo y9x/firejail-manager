@@ -43,6 +43,7 @@ export type ServerInstallOptions = {
     commit: string;
     version: string;
     release?: string;
+    ideVersion?: string;
     extensionIds: string[];
     envVariables: string[];
     useSocketPath: boolean;
@@ -100,6 +101,7 @@ export async function installCodeServer(
         commit: vscodeServerConfig.commit,
         quality: vscodeServerConfig.quality,
         release: bestRelease.build,
+        ideVersion: vscodeServerConfig.ideVersion,
         extensionIds,
         envVariables,
         useSocketPath,
@@ -123,6 +125,7 @@ export async function installCodeServer(
                 commit: vscodeServerConfig.commit,
                 quality: vscodeServerConfig.quality,
                 release: bestRelease.build,
+                ideVersion: vscodeServerConfig.ideVersion,
                 serverApplicationName: vscodeServerConfig.serverApplicationName,
                 serverDataFolderName: vscodeServerConfig.serverDataFolderName,
                 customInstallPath,
@@ -210,7 +213,7 @@ function parseServerInstallOutput(str: string, scriptId: string): { [k: string]:
     return resultMap;
 }
 
-function generateBashInstallScript({ id, quality, version, commit, release, extensionIds, envVariables, useSocketPath, serverApplicationName, serverDataFolderName, serverDownloadUrlTemplate, customInstallPath, serverValidation }: ServerInstallOptions) {
+function generateBashInstallScript({ id, quality, version, commit, release, ideVersion, extensionIds, envVariables, useSocketPath, serverApplicationName, serverDataFolderName, serverDownloadUrlTemplate, customInstallPath, serverValidation }: ServerInstallOptions) {
     const extensions = extensionIds.map(id => '--install-extension ' + id).join(' ');
     const serverDataDir = customInstallPath
         ? customInstallPath.replace(/^~(?=\/|$)/, '$HOME')
@@ -224,6 +227,7 @@ DISTRO_VERSION="${version}"
 DISTRO_COMMIT="${commit}"
 DISTRO_QUALITY="${quality}"
 DISTRO_VSCODIUM_RELEASE="${release ?? ''}"
+DISTRO_IDE_VERSION="${ideVersion ?? ''}"
 
 SERVER_APP_NAME="${serverApplicationName}"
 SERVER_INITIAL_EXTENSIONS="${extensions}"
@@ -303,7 +307,7 @@ if [[ $OS_RELEASE_ID = alpine ]]; then
     PLATFORM=$OS_RELEASE_ID
 fi
 
-SERVER_DOWNLOAD_URL="$(echo "${serverDownloadUrlTemplate.replace(/\$\{/g, '\\${')}" | sed "s/\\\${quality}/$DISTRO_QUALITY/g" | sed "s/\\\${version}/$DISTRO_VERSION/g" | sed "s/\\\${commit}/$DISTRO_COMMIT/g" | sed "s/\\\${os}/$PLATFORM/g" | sed "s/\\\${arch}/$SERVER_ARCH/g" | sed "s/\\\${release}/$DISTRO_VSCODIUM_RELEASE/g")"
+SERVER_DOWNLOAD_URL="$(echo "${serverDownloadUrlTemplate.replace(/\$\{/g, '\\${')}" | sed "s/\\\${quality}/$DISTRO_QUALITY/g" | sed "s/\\\${version}/$DISTRO_VERSION/g" | sed "s/\\\${commit}/$DISTRO_COMMIT/g" | sed "s/\\\${os}/$PLATFORM/g" | sed "s/\\\${arch}/$SERVER_ARCH/g" | sed "s/\\\${release}/$DISTRO_VSCODIUM_RELEASE/g" | sed "s/\\\${ideVersion}/$DISTRO_IDE_VERSION/g" | sed "s/\\\${vscodeVersion}/$DISTRO_IDE_VERSION/g")"
 echo "[phase] arch=$SERVER_ARCH os=$OS_RELEASE_ID download_url=$SERVER_DOWNLOAD_URL" 1>&2
 
 if [[ ! -f $SERVER_SCRIPT ]]; then

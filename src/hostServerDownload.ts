@@ -56,14 +56,16 @@ function resolveOsPlatform(): string {
  * Substitute the `${...}` tokens in a server download URL template. Mirrors the
  * sed pipeline in the jailed install script.
  */
-function buildDownloadUrl(template: string, tokens: { quality: string; version: string; commit: string; os: string; arch: string; release: string }): string {
+function buildDownloadUrl(template: string, tokens: { quality: string; version: string; commit: string; os: string; arch: string; release: string; ideVersion?: string }): string {
     return template
         .replace(/\$\{quality\}/g, tokens.quality)
         .replace(/\$\{version\}/g, tokens.version)
         .replace(/\$\{commit\}/g, tokens.commit)
         .replace(/\$\{os\}/g, tokens.os)
         .replace(/\$\{arch\}/g, tokens.arch)
-        .replace(/\$\{release\}/g, tokens.release);
+        .replace(/\$\{release\}/g, tokens.release)
+        .replace(/\$\{ideVersion\}/g, tokens.ideVersion || '')
+        .replace(/\$\{vscodeVersion\}/g, tokens.ideVersion || '');
 }
 
 /**
@@ -91,6 +93,7 @@ export type HostDownloadParams = {
     commit: string;
     quality: string;
     release: string;
+    ideVersion?: string;
     serverApplicationName: string;
     serverDataFolderName: string;
     customInstallPath: string | undefined;
@@ -128,6 +131,7 @@ export async function downloadServerOnHost(params: HostDownloadParams, logger: L
         os: resolveOsPlatform(),
         arch,
         release: params.release,
+        ideVersion: params.ideVersion,
     });
 
     logger.info(`[host-download] downloading server on host from ${downloadUrl}`);
