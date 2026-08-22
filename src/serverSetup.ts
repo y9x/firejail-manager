@@ -328,13 +328,19 @@ if [[ ! -f $SERVER_SCRIPT ]]; then
         print_install_results_and_exit 1
     fi
     echo "[phase] extracting server tarball..." 1>&2
+    tar -xOf vscode-server.tar.gz > /dev/null 2>&1
+    if (( $? > 0 )); then
+        echo "Error downloaded tarball is corrupt or incomplete"
+        rm -rf vscode-server.tar.gz
+        print_install_results_and_exit 1
+    fi
     tar -xf vscode-server.tar.gz --strip-components 1
     if (( $? > 0 )); then
         echo "Error while extracting server contents"
         rm -rf vscode-server.tar.gz
         print_install_results_and_exit 1
     fi
-    if [[ ! -f $SERVER_SCRIPT ]]; then
+    if [[ ! -f $SERVER_SCRIPT ]] || [[ ! -s $SERVER_SCRIPT ]]; then
         rm -rf $SERVER_DIR/*
         echo "Error server contents are corrupted"
         print_install_results_and_exit 1

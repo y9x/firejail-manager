@@ -100,6 +100,19 @@ export type HostDownloadParams = {
 };
 
 /**
+ * Treat the server as installed only when its launcher script exists and is
+ * non-empty: a crashed or truncated extraction can leave a zero-byte script
+ * behind that would otherwise poison every subsequent launch.
+ */
+function isServerScriptPresent(serverScript: string): boolean {
+    try {
+        return fs.statSync(serverScript).size > 0;
+    } catch {
+        return false;
+    }
+}
+
+/**
  * Download and extract the VS Code server tarball on the host (which has
  * networking) into the jail's data directory. This runs BEFORE the jailed
  * install script, so that script finds `$SERVER_SCRIPT` already present and
@@ -119,7 +132,7 @@ export async function downloadServerOnHost(params: HostDownloadParams, logger: L
     const serverDir = path.join(serverDataDir, 'bin', params.commit);
     const serverScript = path.join(serverDir, 'bin', params.serverApplicationName);
 
-    if (fs.existsSync(serverScript)) {
+    if (isServerScriptPresent(serverScript)) {
         logger.trace(`[host-download] server already present at ${serverScript}, skipping`);
         return;
     }
@@ -142,8 +155,8 @@ export async function downloadServerOnHost(params: HostDownloadParams, logger: L
         await downloadFile(downloadUrl, tarballPath, logger);
         logger.trace('[host-download] extracting server tarball...');
         await extractTarball(tarballPath, serverDir);
-        if (!fs.existsSync(serverScript)) {
-            throw new Error('server contents are corrupted (server script missing after extraction)');
+        if (!isServerScriptPresent(serverScript)) {
+            throw new Error('server contents are corrupted (server script missing or empty after extraction)');
         }
         logger.info(`[host-download] server installed on host at ${serverScript}`);
     } catch (err) {
