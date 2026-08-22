@@ -5,6 +5,7 @@ import JailConnection from './jail/jailConnection';
 import { fetchRelease, IRelease } from './fetchRelease';
 import { JailConfiguration } from './jail/jailConfig';
 import { downloadServerOnHost } from './hostServerDownload';
+import { sanitizeExtensionIds } from './utils/sanitize-extension-ids';
 
 function matchHostnamePattern(hostname: string, pattern: string): number {
     if (hostname === pattern) {
@@ -102,7 +103,7 @@ export async function installCodeServer(
         quality: vscodeServerConfig.quality,
         release: bestRelease.build,
         ideVersion: vscodeServerConfig.ideVersion,
-        extensionIds,
+        extensionIds: sanitizeExtensionIds(extensionIds),
         envVariables,
         useSocketPath,
         serverApplicationName: vscodeServerConfig.serverApplicationName,
