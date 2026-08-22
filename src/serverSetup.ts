@@ -269,8 +269,33 @@ print_install_results_and_exit() {
 LOCKFILE="$TMP_DIR/server_install.lock"
 if command -v flock >/dev/null 2>&1; then
   exec {FD}<>"$LOCKFILE"
-  flock -x -w 30 $FD || print_install_results_and_exit 1
+
+  if flock --help 2>&1 | grep -q -- '-w'; then
+    # wait 30s to acquire lock, otherwise fail
+    flock -x -w 30 $FD || print_install_results_and_exit 1
+  else
+    # BusyBox flock (e.g. Alpine) has no -w; poll with a non-blocking lock instead
+    ELAPSED=0
+
+    while [[ $ELAPSED -lt 30 ]]; do
+        if flock -n -x $FD; then
+            break
+        fi
+
+        sleep 1
+
+        ELAPSED=$((ELAPSED + 1))
+    done
+
+    if [[ $ELAPSED -ge 30 ]]; then
+      echo "Warning: flock cannot acquire the install lock"
+      print_install_results_and_exit 1
+    fi
+  fi
+
   trap "flock -u $FD; trap - EXIT INT HUP; exit" EXIT INT HUP
+else
+  echo "Warning: flock not available, skipping install lock"
 fi
 
 ARCH="$(uname -m)"
@@ -447,6 +472,10 @@ fi
 if [[ -f $SERVER_LOGFILE ]]; then
     echo "[phase] waiting for server to listen..." 1>&2
     for i in {1..35}; do
+        if [[ -n "$(cat $SERVER_LOGFILE | grep 'Error loading shared library libstdc++.so')" ]]; then
+            echo "Error: missing libstdc++"
+            break
+        fi
         LISTENING_ON="$(cat $SERVER_LOGFILE | grep -E 'Extension host agent listening on .+' | sed 's/Extension host agent listening on //')"
         if [[ -n $LISTENING_ON ]]; then
             break
